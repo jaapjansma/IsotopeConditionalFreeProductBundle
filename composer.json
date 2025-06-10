@@ -1,0 +1,19 @@
+{
+  "name":"krabo/isotope-conditional-free-product-bundle",
+  "description":"Conditional Free Products for Isotope.",
+  "type": "contao-bundle",
+  "license":"AGPL-3.0-or-later",
+  "version": "1.0.0",
+  "require": {
+    "contao/core-bundle": "^4.13",
+    "isotope/isotope-core": "^2.8"
+  },
+  "extra": {
+    "contao-manager-plugin": "Krabo\\IsotopeConditionalFreeProductBundle\\ContaoManager\\Plugin"
+  },
+  "autoload": {
+    "psr-4": {
+      "Krabo\\IsotopeConditionalFreeProductBundle\\": "src/"
+    }
+  }
+}
