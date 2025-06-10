@@ -143,6 +143,7 @@ class ConditionalFreeProducts extends Controller {
         $strCacheKey         = 'product' . $objProduct->id . '_' . $strAttribute;
 
         if (!isset($arrGalleries[$strCacheKey])) {
+          $arrConfig['jumpTo'] = null;
           $arrGalleries[$strCacheKey] = Gallery::createForProductAttribute(
             $objProduct,
             $strAttribute,
