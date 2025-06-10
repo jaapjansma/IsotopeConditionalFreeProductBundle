@@ -22,6 +22,9 @@ use Contao\Controller;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Isotope\Interfaces\IsotopeProductCollection;
+use Isotope\Model\Gallery;
+use Isotope\Model\Gallery\Standard as StandardGallery;
+use Isotope\Model\Product;
 use Isotope\Model\ProductCollection;
 use Isotope\Model\ProductCollection\Cart;
 use Isotope\Model\ProductCollection\Order;
@@ -88,6 +91,7 @@ class ConditionalFreeProducts extends Controller {
   }
 
   public function addCollectionToTemplate(FrontendTemplate $objTemplate, array $arrItems, ProductCollection $productCollection, array $arrConfig) {
+    $arrGalleries = array();
     $objTemplate->freeProducts = [];
     if ($productCollection instanceof Cart) {
       if (!isset($productCollection->freeProducts)) {
@@ -110,16 +114,44 @@ class ConditionalFreeProducts extends Controller {
             }
             $freeProductsSettings[$objSurcharge->source_id]['checked'] = $isChecked ? 1 : 0;
           }
+          $objIsoProduct = null;
+          $objFreeProduct = IsotopeConditionalFreeProduct::findByPk($objSurcharge->source_id);
+          if ($objFreeProduct) {
+            $objIsoProduct = Product::findByPk($objFreeProduct->product_id);
+          }
           $arrFreeProducts[] = [
             'id' => $objSurcharge->source_id,
             'label' => $objSurcharge->label,
             'quantity' => $objSurcharge->quantity,
             'checked' => $freeProductsSettings[$objSurcharge->source_id]['checked'],
+            'product' => $objIsoProduct,
           ];
         }
         $productCollection->freeProducts = $freeProductsSettings;
       }
       $objTemplate->freeProducts = $arrFreeProducts;
+      $objTemplate->getFreeProductGallery = function (
+        $strAttribute,
+        Product $objProduct = null
+      ) use (
+        $arrConfig,
+        &$arrGalleries
+      ) {
+        if ($objProduct == null) {
+          return new StandardGallery();
+        }
+        $strCacheKey         = 'product' . $objProduct->id . '_' . $strAttribute;
+
+        if (!isset($arrGalleries[$strCacheKey])) {
+          $arrGalleries[$strCacheKey] = Gallery::createForProductAttribute(
+            $objProduct,
+            $strAttribute,
+            $arrConfig
+          );
+        }
+
+        return $arrGalleries[$strCacheKey];
+      };
     }
   }
 
