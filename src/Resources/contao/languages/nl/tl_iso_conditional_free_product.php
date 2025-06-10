@@ -1,5 +1,6 @@
 <?php
 
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['deleteConfirm'] = 'Weet u zeker dat u dit gratis product wilt verwijderen?';
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['name'] = ['Naam', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['applyTo'] = ['Toepassen op', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['applyToOptions']['cart'] = 'Winkelwagen (1x per winkelwagen)';
