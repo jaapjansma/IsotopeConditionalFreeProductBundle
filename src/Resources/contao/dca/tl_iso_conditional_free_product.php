@@ -158,7 +158,7 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
     (
       'exclude'                       => true,
       'inputType'                     => 'text',
-      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
+      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50 clr'),
       'sql'                           => "int(10) unsigned NOT NULL default '0'",
     ),
     'maxItemQuantity' => array
@@ -172,7 +172,7 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
     (
       'exclude'                       => true,
       'inputType'                     => 'text',
-      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
+      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50 clr'),
       'sql'                           => "int(10) unsigned NOT NULL default '0'",
     ),
     'maxSubtotal' => array
