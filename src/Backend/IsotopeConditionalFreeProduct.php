@@ -20,10 +20,12 @@ namespace Krabo\IsotopeConditionalFreeProductBundle\Backend;
 
 use Contao\Backend;
 use Contao\Controller;
+use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\Database;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
+use Contao\System;
 
 class IsotopeConditionalFreeProduct extends Backend {
   public function __construct()
@@ -32,9 +34,13 @@ class IsotopeConditionalFreeProduct extends Backend {
     $this->import('BackendUser', 'User');
   }
 
-  public function loadProducts($varValue, $dc)
+
+  /**
+   * Load product restrictions from linked table
+   */
+  public function loadRestrictions($varValue, $dc)
   {
-    $varValue = Database::getInstance()->execute("SELECT product_id FROM tl_iso_conditional_free_product_products WHERE pid={$dc->activeRecord->id}")->fetchEach('product_id');
+    $varValue = Database::getInstance()->execute("SELECT object_id FROM tl_iso_conditional_free_product_restriction WHERE pid={$dc->activeRecord->id} AND type='{$dc->field}'")->fetchEach('object_id');
 
     if (!empty($GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['csv'])) {
       $varValue = implode($GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['csv'], $varValue);
@@ -44,9 +50,9 @@ class IsotopeConditionalFreeProduct extends Backend {
   }
 
   /**
-   * Save rule restrictions to linked table. Only update what necessary to prevent the IDs from increasing on every save_callback
+   * Save product restrictions to linked table. Only update what necessary to prevent the IDs from increasing on every save_callback
    */
-  public function saveProducts($varValue, $dc)
+  public function saveRestrictions($varValue, $dc)
   {
     if (!empty($GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['csv'])) {
       $arrNew = explode($GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['csv'], $varValue);
@@ -55,21 +61,21 @@ class IsotopeConditionalFreeProduct extends Backend {
     }
 
     if (!\is_array($arrNew) || empty($arrNew)) {
-      Database::getInstance()->query("DELETE FROM tl_iso_conditional_free_product_products WHERE pid={$dc->activeRecord->id}");
+      Database::getInstance()->query("DELETE FROM tl_iso_conditional_free_product_restriction WHERE pid={$dc->activeRecord->id} AND type='{$dc->field}'");
 
     } else {
-      $arrOld = Database::getInstance()->execute("SELECT product_id FROM tl_iso_conditional_free_product_products WHERE pid={$dc->activeRecord->id}")->fetchEach('product_id');
+      $arrOld = Database::getInstance()->execute("SELECT object_id FROM tl_iso_conditional_free_product_restriction WHERE pid={$dc->activeRecord->id} AND type='{$dc->field}'")->fetchEach('object_id');
 
       $arrInsert = array_diff($arrNew, $arrOld);
       $arrDelete = array_diff($arrOld, $arrNew);
 
       if (!empty($arrDelete)) {
-        Database::getInstance()->query("DELETE FROM tl_iso_conditional_free_product_products WHERE pid={$dc->activeRecord->id} AND product_id IN (" . implode(',', $arrDelete) . ")");
+        Database::getInstance()->query("DELETE FROM tl_iso_conditional_free_product_restriction WHERE pid={$dc->activeRecord->id} AND type='{$dc->field}' AND object_id IN (" . implode(',', $arrDelete) . ")");
       }
 
       if (!empty($arrInsert)) {
         $time = time();
-        Database::getInstance()->query("INSERT INTO tl_iso_conditional_free_product_products (pid,tstamp,product_id) VALUES ({$dc->id}, $time, " . implode("), ({$dc->id}, $time, ", $arrInsert) . ")");
+        Database::getInstance()->query("INSERT INTO tl_iso_conditional_free_product_restriction (pid,tstamp,type,object_id) VALUES ({$dc->id}, $time, '{$dc->field}', " . implode("), ({$dc->id}, $time, '{$dc->field}', ", $arrInsert) . ")");
       }
     }
 
@@ -84,7 +90,7 @@ class IsotopeConditionalFreeProduct extends Backend {
     }
 
     // Check permissions AFTER checking the tid, so hacking attempts are logged
-    if (!$this->User->isAdmin && !$this->User->hasAccess('tl_iso_rule::enabled', 'alexf')) {
+    if (!$this->User->isAdmin && !$this->User->hasAccess('tl_iso_conditional_free_product::enabled', 'alexf')) {
       return Image::getHtml($icon, $label) . ' ';
     }
 
@@ -95,6 +101,23 @@ class IsotopeConditionalFreeProduct extends Backend {
     }
 
     return '<a href="' . $this->addToUrl($href) . '" title="' . StringUtil::specialchars($title) . '"' . $attributes . '>' . Image::getHtml($icon, $label) . '</a> ';
+  }
+
+  public function toggleVisibility($intId, $blnVisible)
+  {
+    // Check permissions to publish
+    if (!$this->User->isAdmin && !$this->User->hasAccess('tl_iso_conditional_free_product::enabled', 'alexf')) {
+      throw new AccessDeniedException('Not enough permissions to enable/disable rule ID "' . $intId . '"');
+    }
+    // Trigger the save_callback
+    if (\is_array($GLOBALS['TL_DCA']['tl_iso_conditional_free_product']['fields']['enabled']['save_callback'])) {
+      foreach ($GLOBALS['TL_DCA']['tl_iso_conditional_free_product']['fields']['enabled']['save_callback'] as $callback) {
+        $objCallback = System::importStatic($callback[0]);
+        $blnVisible = $objCallback->{$callback[1]}($blnVisible, $this);
+      }
+    }
+    // Update the database
+    Database::getInstance()->prepare("UPDATE tl_iso_conditional_free_product SET tstamp=" . time() . ", enabled='" . ($blnVisible ? 1 : '') . "' WHERE id=?")->execute($intId);
   }
 
 }

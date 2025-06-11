@@ -7,8 +7,16 @@ $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['applyToOptions']['cart']
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['applyToOptions']['product'] = 'Voor ieder product in de winkelwagen';
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['product_id'] = ['Product', 'Selecteer een gratis product'];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['limit_legend'] = 'Beperkken tot';
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['minItemQuantity'] = ['Aantal producten (minimum)', ''];
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['maxItemQuantity'] = ['Aantal producten (maximum)', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['minSubtotal'] = ['Subtotaal winkelwagen (minimum)', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['maxSubtotal'] = ['Subtotaal winkelwagen (maximum)', ''];
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions'] = ['Beperk tot producten', ''];
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_options']['none'] = 'Niet beperken';
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_options']['producttypes'] = 'Productsoorten';
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_options']['products'] = 'Producten';
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_products'] = ['Producten', ''];
+$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_types'] = ['Productsoorten', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['datim_legend'] = 'Geldigheid';
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['startDate'] = ['Startdatum', ''];
 $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['endDate'] = ['Einddatum', ''];

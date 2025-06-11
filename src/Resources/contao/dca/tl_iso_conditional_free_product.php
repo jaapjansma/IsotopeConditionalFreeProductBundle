@@ -24,6 +24,7 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
   'config' => array
   (
     'dataContainer'               => 'Table',
+    'ctable'                      => array('tl_iso_conditional_free_product_restriction'),
     'sql' => array
     (
       'keys' => array
@@ -82,12 +83,15 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
   // Palettes
   'palettes' => array
   (
-    'default'                     => 'name,applyTo,product_id;{limit_legend},minItemQuantity,maxItemQuantity,minSubtotal,maxSubtotal;{datim_legend:hide},startDate,endDate,startTime,endTime;{enabled_legend},enabled'
+    '__selector__'                      => array('productRestrictions'),
+    'default'                     => 'name,applyTo,product_id;{limit_legend},productRestrictions,minItemQuantity,maxItemQuantity,minSubtotal,maxSubtotal;{datim_legend:hide},startDate,endDate,startTime,endTime;{enabled_legend},enabled'
   ),
 
   // Subpalettes
   'subpalettes' => array
   (
+    'productRestrictions_producttypes'  => 'productRestrictions_types',
+    'productRestrictions_products'      => 'productRestrictions_products',
   ),
 
   // Fields
@@ -114,6 +118,7 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
       'inputType'               => 'radio',
       'options'                 => ['cart', 'product'],
       'reference'               => $GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['applyToOptions'],
+      'eval'                    => array('mandatory'=>true, 'tl_class'=>'w50'),
       'sql'                     => "varchar(255) NOT NULL default 'cart'"
     ),
     'product_id'     => array
@@ -156,22 +161,6 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
       'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
       'sql'                           => "int(10) unsigned NOT NULL default '0'",
     ),
-    'minSubtotal' => array
-    (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['minSubtotal'],
-      'exclude'                       => true,
-      'inputType'                     => 'text',
-      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
-      'sql'                           => "int(10) unsigned NOT NULL default '0'",
-    ),
-    'maxSubtotal' => array
-    (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['maxSubtotal'],
-      'exclude'                       => true,
-      'inputType'                     => 'text',
-      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
-      'sql'                           => "int(10) unsigned NOT NULL default '0'",
-    ),
     'maxItemQuantity' => array
     (
       'exclude'                       => true,
@@ -179,9 +168,88 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
       'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
       'sql'                           => "int(10) unsigned NOT NULL default '0'",
     ),
+    'minSubtotal' => array
+    (
+      'exclude'                       => true,
+      'inputType'                     => 'text',
+      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
+      'sql'                           => "int(10) unsigned NOT NULL default '0'",
+    ),
+    'maxSubtotal' => array
+    (
+      'exclude'                       => true,
+      'inputType'                     => 'text',
+      'eval'                          => array('maxlength'=>10, 'rgxp'=>'digit', 'tl_class'=>'w50'),
+      'sql'                           => "int(10) unsigned NOT NULL default '0'",
+    ),
+    'productRestrictions' => array
+    (
+      'inputType'                     => 'radio',
+      'default'                       => 'none',
+      'exclude'                       => true,
+      'filter'                        => true,
+      'options'                       => array('none', 'producttypes', 'products'),
+      'reference'                     => &$GLOBALS['TL_LANG']['tl_iso_conditional_free_product']['productRestrictions_options'],
+      'eval'                          => array('submitOnChange'=>true, 'tl_class'=>'clr w50 w50h'),
+      'sql'                           => "varchar(32) NOT NULL default ''",
+    ),
+    'productRestrictions_types' => array
+    (
+      'exclude'                       => true,
+      'inputType'                     => 'checkbox',
+      'foreignKey'                    => \Isotope\Model\ProductType::getTable().'.name',
+      'eval'                          => array('mandatory'=>true, 'multiple'=>true, 'doNotSaveEmpty'=>true, 'tl_class'=>'clr'),
+      'load_callback' => array
+      (
+        array('\Krabo\IsotopeConditionalFreeProductBundle\Backend\IsotopeConditionalFreeProduct', 'loadRestrictions'),
+      ),
+      'save_callback' => array
+      (
+        array('\Krabo\IsotopeConditionalFreeProductBundle\Backend\IsotopeConditionalFreeProduct', 'saveRestrictions'),
+      ),
+    ),
+    'productRestrictions_products'     => array
+    (
+      'exclude'                       => true,
+      'inputType'                     => 'tableLookup',
+      'eval' => array
+      (
+        'mandatory'                 => true,
+        'doNotSaveEmpty'            => true,
+        'tl_class'                  => 'clr',
+        'foreignTable'              => 'tl_iso_product',
+        'fieldType'                 => 'checkbox',
+        'listFields'                => array(\Isotope\Model\ProductType::getTable().'.name', 'name', 'sku'),
+        'joins'                     => array
+        (
+          \Isotope\Model\ProductType::getTable() => array
+          (
+            'type' => 'LEFT JOIN',
+            'jkey' => 'id',
+            'fkey' => 'type',
+          ),
+        ),
+        'searchFields'              => array('name', 'alias', 'sku', 'description'),
+        'customLabels'              => array
+        (
+          $GLOBALS['TL_DCA'][\Isotope\Model\Product::getTable()]['fields']['type']['label'][0],
+          $GLOBALS['TL_DCA'][\Isotope\Model\Product::getTable()]['fields']['name']['label'][0],
+          $GLOBALS['TL_DCA'][\Isotope\Model\Product::getTable()]['fields']['sku']['label'][0],
+        ),
+        'sqlWhere'                  => 'pid=0',
+        'searchLabel'               => 'Search products',
+      ),
+      'load_callback' => array
+      (
+        array('\Krabo\IsotopeConditionalFreeProductBundle\Backend\IsotopeConditionalFreeProduct', 'loadRestrictions'),
+      ),
+      'save_callback' => array
+      (
+        array('\Krabo\IsotopeConditionalFreeProductBundle\Backend\IsotopeConditionalFreeProduct', 'saveRestrictions'),
+      ),
+    ),
     'startDate' => array
     (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['startDate'],
       'exclude'                       => true,
       'inputType'                     => 'text',
       'eval'                          => array('rgxp'=>'datim', 'datepicker'=>true, 'tl_class'=>'w50 wizard'),
@@ -189,7 +257,6 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
     ),
     'endDate' => array
     (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['endDate'],
       'exclude'                       => true,
       'inputType'                     => 'text',
       'eval'                          => array('rgxp'=>'datim', 'datepicker'=>true, 'tl_class'=>'w50 wizard'),
@@ -197,7 +264,6 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
     ),
     'startTime' => array
     (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['startTime'],
       'exclude'                       => true,
       'inputType'                     => 'text',
       'eval'                          => array('rgxp'=>'time', 'datepicker'=>true, 'tl_class'=>'w50 wizard'),
@@ -205,7 +271,6 @@ $GLOBALS['TL_DCA']['tl_iso_conditional_free_product'] = array
     ),
     'endTime' => array
     (
-      'label'                         => &$GLOBALS['TL_LANG']['tl_iso_rule']['endTime'],
       'exclude'                       => true,
       'inputType'                     => 'text',
       'eval'                          => array('rgxp'=>'time', 'datepicker'=>true, 'tl_class'=>'w50 wizard'),

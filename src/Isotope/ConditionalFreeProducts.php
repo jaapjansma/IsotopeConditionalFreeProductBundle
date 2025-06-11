@@ -154,6 +154,17 @@ class ConditionalFreeProducts extends Controller {
         return $arrGalleries[$strCacheKey];
       };
     }
+    $freeProductSurcharges = [];
+    $surcharges = $objTemplate->surcharges;
+    foreach($surcharges as $index => $surcharge) {
+      if ($surcharge['type'] == 'iso_conditional_free_product') {
+        $surcharge['quantity'] = $surcharge['surcharge']->quantity;
+        $freeProductSurcharges[$index] = $surcharge;
+        unset($surcharges[$index]);
+      }
+    }
+    $objTemplate->surcharges = $surcharges;
+    $objTemplate->freeProductSurcharges = $freeProductSurcharges;
   }
 
   public function transferFreeProducts(ProductCollection $oldCollection, ProductCollection $newCollection) {

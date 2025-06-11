@@ -20,7 +20,9 @@ namespace Krabo\IsotopeConditionalFreeProductBundle\Isotope\Model\ProductCollect
 
 use Isotope\Interfaces\IsotopeProductCollection;
 use Isotope\Interfaces\IsotopeProductCollectionSurcharge;
+use Isotope\Isotope;
 use Isotope\Model\Product;
+use Isotope\Model\ProductCollectionItem;
 use Isotope\Model\ProductCollectionSurcharge;
 use Krabo\IsotopeConditionalFreeProductBundle\Model\IsotopeConditionalFreeProduct;
 
@@ -37,9 +39,51 @@ class IsotopeConditionalFreeProductSurcharge extends ProductCollectionSurcharge 
       return $arrSurcharges;
     }
 
+    $arrProducts = Isotope::getCart()->getItems();
+
+    $qtyInCart = $objCollection->sumItemsQuantity();
+    if ($objFreeProduct->productRestrictions == 'producttypes') {
+      $typeIds = $objFreeProduct->findRestrictedIds();
+      foreach ($arrProducts as $objProduct) {
+        if ($objProduct instanceof ProductCollectionItem) {
+          if (!$objProduct->hasProduct()) {
+            continue;
+          }
+
+          $objIsoProduct = $objProduct->getProduct();
+          if ($objIsoProduct) {
+            if (in_array($objIsoProduct->type, $typeIds)) {
+              $qtyInCart = $objProduct->quantity;
+            }
+          }
+        }
+      }
+    } elseif ($objFreeProduct->productRestrictions == 'products') {
+      $productIds = $objFreeProduct->findRestrictedIds();
+      foreach ($arrProducts as $objProduct) {
+        if ($objProduct instanceof ProductCollectionItem) {
+          if (!$objProduct->hasProduct()) {
+            continue;
+          }
+          $objIsoProduct = $objProduct->getProduct();
+          if ($objIsoProduct) {
+            if (in_array($objIsoProduct->id, $productIds)) {
+              $qtyInCart = $objProduct->quantity;
+            }
+          }
+        }
+      }
+    }
+    if ($objFreeProduct->minItemQuantity > 0 && $objFreeProduct->minItemQuantity > $qtyInCart) {
+      return $arrSurcharges;
+    }
+    if ($objFreeProduct->maxItemQuantity > 0 && $objFreeProduct->maxItemQuantity < $qtyInCart) {
+      return $arrSurcharges;
+    }
+
     $qty = 1;
     if ($objFreeProduct->applyTo == 'product') {
-      $qty = $objCollection->sumItemsQuantity();
+      $qty = $qtyInCart;
     }
     $objIsoProduct = null;
     if ($objFreeProduct->product_id) {
