@@ -97,6 +97,7 @@ class ConditionalFreeProducts extends Controller {
       if (!isset($productCollection->freeProducts)) {
         $productCollection->freeProducts = array();
       }
+      $doSave = false;
       $freeProductsSettings = $productCollection->freeProducts;
       $arrFreeProducts = [];
       foreach($productCollection->getSurcharges() as $objSurcharge) {
@@ -113,6 +114,7 @@ class ConditionalFreeProducts extends Controller {
               $isChecked = true;
             }
             $freeProductsSettings[$objSurcharge->source_id]['checked'] = $isChecked ? 1 : 0;
+            $doSave = true;
           }
           $objIsoProduct = null;
           $objFreeProduct = IsotopeConditionalFreeProduct::findByPk($objSurcharge->source_id);
@@ -127,7 +129,10 @@ class ConditionalFreeProducts extends Controller {
             'product' => $objIsoProduct,
           ];
         }
+      }
+      if ($doSave) {
         $productCollection->freeProducts = $freeProductsSettings;
+        $productCollection->save();
       }
       $objTemplate->freeProducts = $arrFreeProducts;
       $objTemplate->getFreeProductGallery = function (
