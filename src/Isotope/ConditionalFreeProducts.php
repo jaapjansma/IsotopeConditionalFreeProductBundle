@@ -99,55 +99,56 @@ class ConditionalFreeProducts extends Controller {
   public function addCollectionToTemplate(FrontendTemplate $objTemplate, array $arrItems, ProductCollection $productCollection, array $arrConfig) {
     $arrGalleries = array();
     $objTemplate->freeProducts = [];
-    if ($productCollection instanceof Cart) {
-      if (!isset($productCollection->freeProducts)) {
-        $productCollection->freeProducts = array();
-      }
-      if (!isset($productCollection->disableFreeProducts)) {
-        $productCollection->disableFreeProducts = false;
-      }
-      $doSave = false;
-      $freeProductsSettings = $productCollection->freeProducts;
-      $arrFreeProducts = [];
-      if ($productCollection->disableFreeProducts) {
-        $freeProductsSettings = [];
-        $doSave = true;
-      } else {
-        foreach ($productCollection->getSurcharges() as $objSurcharge) {
-          if ($objSurcharge instanceof IsotopeConditionalFreeProductSurcharge) {
-            if (!isset($freeProductsSettings[$objSurcharge->source_id])) {
-              $freeProductsSettings[$objSurcharge->source_id] = [
-                'checked' => 1,
-              ];
-            }
-            if (Input::post('FORM_SUBMIT') == $objTemplate->formId && $objTemplate->isEditable) {
-              $isChecked = false;
-              $freeProducts = Input::post('freeProduct');
-              if (isset($freeProducts[$objSurcharge->source_id])) {
-                $isChecked = true;
-              }
-              $freeProductsSettings[$objSurcharge->source_id]['checked'] = $isChecked ? 1 : 0;
-              $doSave = true;
-            }
-            $objIsoProduct = null;
-            $objFreeProduct = IsotopeConditionalFreeProduct::findByPk($objSurcharge->source_id);
-            if ($objFreeProduct) {
-              $objIsoProduct = Product::findByPk($objFreeProduct->product_id);
-            }
-            $arrFreeProducts[] = [
-              'id' => $objSurcharge->source_id,
-              'label' => $objSurcharge->label,
-              'quantity' => $objSurcharge->quantity,
-              'checked' => $freeProductsSettings[$objSurcharge->source_id]['checked'],
-              'product' => $objIsoProduct,
+
+    if (!isset($productCollection->freeProducts)) {
+      $productCollection->freeProducts = array();
+    }
+    if (!isset($productCollection->disableFreeProducts)) {
+      $productCollection->disableFreeProducts = false;
+    }
+    $doSave = false;
+    $freeProductsSettings = $productCollection->freeProducts;
+    $arrFreeProducts = [];
+    if ($productCollection->disableFreeProducts) {
+      $freeProductsSettings = [];
+      $doSave = true;
+    } else {
+      foreach ($productCollection->getSurcharges() as $objSurcharge) {
+        if ($objSurcharge instanceof IsotopeConditionalFreeProductSurcharge) {
+          if (!isset($freeProductsSettings[$objSurcharge->source_id])) {
+            $freeProductsSettings[$objSurcharge->source_id] = [
+              'checked' => 1,
             ];
           }
+          if (Input::post('FORM_SUBMIT') == $objTemplate->formId && $objTemplate->isEditable) {
+            $isChecked = false;
+            $freeProducts = Input::post('freeProduct');
+            if (isset($freeProducts[$objSurcharge->source_id])) {
+              $isChecked = true;
+            }
+            $freeProductsSettings[$objSurcharge->source_id]['checked'] = $isChecked ? 1 : 0;
+            $doSave = true;
+          }
+          $objIsoProduct = null;
+          $objFreeProduct = IsotopeConditionalFreeProduct::findByPk($objSurcharge->source_id);
+          if ($objFreeProduct) {
+            $objIsoProduct = Product::findByPk($objFreeProduct->product_id);
+          }
+          $arrFreeProducts[] = [
+            'id' => $objSurcharge->source_id,
+            'label' => $objSurcharge->label,
+            'quantity' => $objSurcharge->quantity,
+            'checked' => $freeProductsSettings[$objSurcharge->source_id]['checked'],
+            'product' => $objIsoProduct,
+          ];
         }
       }
-      if ($doSave) {
-        $productCollection->freeProducts = $freeProductsSettings;
-        $productCollection->save();
-      }
+    }
+    if ($productCollection instanceof Cart && $doSave) {
+      $productCollection->freeProducts = $freeProductsSettings;
+      $productCollection->save();
+    }
+    if ($productCollection instanceof Cart) {
       $objTemplate->freeProducts = $arrFreeProducts;
       $objTemplate->getFreeProductGallery = function (
         $strAttribute,
@@ -159,7 +160,7 @@ class ConditionalFreeProducts extends Controller {
         if ($objProduct == null) {
           return new StandardGallery();
         }
-        $strCacheKey         = 'product' . $objProduct->id . '_' . $strAttribute;
+        $strCacheKey = 'product' . $objProduct->id . '_' . $strAttribute;
 
         if (!isset($arrGalleries[$strCacheKey])) {
           $arrConfig['jumpTo'] = null;
@@ -178,6 +179,9 @@ class ConditionalFreeProducts extends Controller {
     foreach($surcharges as $index => $surcharge) {
       if ($surcharge['type'] == 'iso_conditional_free_product') {
         $surcharge['quantity'] = $surcharge['surcharge']->quantity;
+        $checked = IsotopeConditionalFreeProductSurcharge::isFreeProductInCart($productCollection, $surcharge['source_id']);
+        $surcharge['checked'] = $checked;
+        $surcharge['rowClass'] = $checked ? 'checked' : 'unchecked';
         $freeProductSurcharges[$index] = $surcharge;
         unset($surcharges[$index]);
       }

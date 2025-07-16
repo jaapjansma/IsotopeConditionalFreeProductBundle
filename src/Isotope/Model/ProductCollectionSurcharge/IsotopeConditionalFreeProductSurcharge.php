@@ -99,7 +99,7 @@ class IsotopeConditionalFreeProductSurcharge extends ProductCollectionSurcharge 
     }
     $freeProductsSettings = $objCollection->freeProducts;
 
-    $checked = static::isFreeProductInCart($objCollection, $objFreeProduct);
+    $checked = static::isFreeProductInCart($objCollection, $objFreeProduct->id);
     $objSurcharge = new static();
     $objSurcharge->source_id = $objFreeProduct->id;
     $objSurcharge->label = $objIsoProduct->getName();
@@ -125,13 +125,13 @@ class IsotopeConditionalFreeProductSurcharge extends ProductCollectionSurcharge 
     return true;
   }
 
-  public static function isFreeProductInCart(IsotopeProductCollection $productCollection, IsotopeConditionalFreeProduct $objFreeProduct): bool {
+  public static function isFreeProductInCart(IsotopeProductCollection $productCollection, int $objFreeProductId): bool {
     if (!isset($productCollection->freeProducts)) {
       $productCollection->freeProducts = array();
     }
     $checked = true;
-    if (isset($productCollection->freeProducts[$objFreeProduct->id]['checked'])) {
-      $checked = (bool) $productCollection->freeProducts[$objFreeProduct->id]['checked'];
+    if (isset($productCollection->freeProducts[$objFreeProductId]['checked'])) {
+      $checked = (bool) $productCollection->freeProducts[$objFreeProductId]['checked'];
     }
     return $checked;
   }
