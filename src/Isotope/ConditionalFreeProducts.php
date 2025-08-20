@@ -21,7 +21,9 @@ namespace Krabo\IsotopeConditionalFreeProductBundle\Isotope;
 use Contao\Controller;
 use Contao\FrontendTemplate;
 use Contao\Input;
+use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Interfaces\IsotopeProductCollection;
+use Isotope\Isotope;
 use Isotope\Model\Gallery;
 use Isotope\Model\Gallery\Standard as StandardGallery;
 use Isotope\Model\Product;
@@ -30,6 +32,8 @@ use Isotope\Model\ProductCollection\Cart;
 use Isotope\Model\ProductCollection\Order;
 use Krabo\IsotopeConditionalFreeProductBundle\Isotope\Model\ProductCollectionSurcharge\IsotopeConditionalFreeProductSurcharge;
 use Krabo\IsotopeConditionalFreeProductBundle\Model\IsotopeConditionalFreeProduct;
+use Krabo\IsotopeStockBundle\Helper\ProductHelper;
+use Krabo\IsotopeStockBundle\Model\AccountModel;
 
 class ConditionalFreeProducts extends Controller {
 
@@ -178,7 +182,12 @@ class ConditionalFreeProducts extends Controller {
     $surcharges = $objTemplate->surcharges;
     foreach($surcharges as $index => $surcharge) {
       if ($surcharge['type'] == 'iso_conditional_free_product') {
-        $surcharge['quantity'] = $surcharge['surcharge']->quantity;
+        $surcharge['quantity'] = '';
+        if ($surcharge['surcharge']->quantity !== null) {
+          $surcharge['quantity'] = $surcharge['surcharge']->quantity;
+        } elseif (isset($freeProductsSettings[$surcharge['source_id']]['qty'])) {
+          $surcharge['quantity'] = $freeProductsSettings[$surcharge['source_id']]['qty'];
+        }
         $checked = IsotopeConditionalFreeProductSurcharge::isFreeProductInCart($productCollection, $surcharge['source_id']);
         $surcharge['checked'] = $checked;
         $surcharge['rowClass'] = $checked ? 'checked' : 'unchecked';

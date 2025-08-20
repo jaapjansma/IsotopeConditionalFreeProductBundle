@@ -18,6 +18,7 @@
 
 namespace Krabo\IsotopeConditionalFreeProductBundle\Isotope\Model\ProductCollectionSurcharge;
 
+use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Interfaces\IsotopeProductCollection;
 use Isotope\Interfaces\IsotopeProductCollectionSurcharge;
 use Isotope\Isotope;
@@ -25,6 +26,8 @@ use Isotope\Model\Product;
 use Isotope\Model\ProductCollectionItem;
 use Isotope\Model\ProductCollectionSurcharge;
 use Krabo\IsotopeConditionalFreeProductBundle\Model\IsotopeConditionalFreeProduct;
+use Krabo\IsotopeStockBundle\Helper\ProductHelper;
+use Krabo\IsotopeStockBundle\Model\AccountModel;
 
 class IsotopeConditionalFreeProductSurcharge extends ProductCollectionSurcharge implements IsotopeProductCollectionSurcharge {
 
@@ -91,6 +94,15 @@ class IsotopeConditionalFreeProductSurcharge extends ProductCollectionSurcharge 
     }
 
     if (!$objIsoProduct) {
+      return $arrSurcharges;
+    }
+
+    $isAvailable = false;
+    $stockAccountType = ProductHelper::getProductStockPerAccountType($objIsoProduct->getId());
+    if (isset($stockAccountType[AccountModel::STOCK_TYPE]) && isset($stockAccountType[AccountModel::STOCK_TYPE]['balance']) && $stockAccountType[AccountModel::STOCK_TYPE]['balance'] >= $qty) {
+      $isAvailable = true;
+    }
+    if (!$isAvailable) {
       return $arrSurcharges;
     }
 
