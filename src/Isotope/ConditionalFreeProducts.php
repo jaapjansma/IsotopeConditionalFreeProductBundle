@@ -79,7 +79,7 @@ class ConditionalFreeProducts extends Controller {
       $objCart = $objCollection->getRelated('source_collection_id');
     }
 
-    if (!isset($objCart->disableFreeProducts)) {
+    if ($objCart && !isset($objCart->disableFreeProducts)) {
       $objCart->disableFreeProducts = false;
     }
 
